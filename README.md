@@ -4,7 +4,7 @@
 | --- | ---------- | -------- |
 | normalized (unbatched) | ![](https://github.com/mikeizbicki/twitter_postgres_parallel/workflows/tests_normalized_sequential/badge.svg) | ![](https://github.com/mikeizbicki/twitter_postgres_parallel/workflows/tests_normalized_parallel/badge.svg) |
 | normalized (batched) | ![](https://github.com/mikeizbicki/twitter_postgres_parallel/workflows/tests_normalizedbatch_sequential/badge.svg) |  ![](https://github.com/mikeizbicki/twitter_postgres_parallel/workflows/tests_normalizedbatch_parallel/badge.svg) |
-| denormalized | ![](https://github.com/mikeizbicki/twitter_postgres_parallel/workflows/tests_denormalized_sequential/badge.svg) | ![](https://github.com/mikeizbicki/twitter_postgres_parallel/workflows/tests_denormalized_parallel/badge.svg) |
+| denormalized | [![tests_denormalized_sequential](https://github.com/KaiYeung921/twitter_postgres_parallel/actions/workflows/tests_denormalized.yml/badge.svg)](https://github.com/KaiYeung921/twitter_postgres_parallel/actions/workflows/tests_denormalized.yml) | [![tests_denormalized_parallel](https://github.com/KaiYeung921/twitter_postgres_parallel/actions/workflows/tests_denormalized_parallel.yml/badge.svg)](https://github.com/KaiYeung921/twitter_postgres_parallel/actions/workflows/tests_denormalized_parallel.yml) |
 
 In this assignment, you will learn how to load data into postgres much faster using two techniques:
 1. batch loading (i.e. running the INSERT command on more than one row at a time)
