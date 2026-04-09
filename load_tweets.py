@@ -180,6 +180,8 @@ def insert_tweet(connection,tweet):
         # insert into the tweets table
         ########################################
 
+        geo_str = None
+        geo_coords = None
         try:
             geo_coords = tweet['geo']['coordinates']
             geo_coords = str(tweet['geo']['coordinates'][0]) + ' ' + str(tweet['geo']['coordinates'][1])
@@ -197,10 +199,9 @@ def insert_tweet(connection,tweet):
                     geo_coords+=')'
                 geo_coords+=')'
                 geo_str = 'MULTIPOLYGON'
-            except KeyError:
-                if tweet['user']['geo_enabled']:
-                    geo_str = None
-                    geo_coords = None
+            except (KeyError, TypeError):
+                geo_str = None
+                geo_coords = None
 
         try:
             text = tweet['extended_tweet']['full_text']
