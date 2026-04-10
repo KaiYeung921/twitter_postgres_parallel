@@ -450,8 +450,8 @@ if __name__ == '__main__':
 
                         # load and insert the tweet
                         tweet = json.loads(line)
-                        insert_tweet(connection,tweet)
-                        connection.commit()
+                        with connection.begin():
+                            insert_tweet(connection, tweet)
 
                         # print message
                         if i%args.print_every==0:
