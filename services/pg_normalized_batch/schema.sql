@@ -4,21 +4,16 @@ CREATE EXTENSION postgis;
 
 BEGIN;
 
-CREATE TABLE urls (
-    id_urls BIGSERIAL PRIMARY KEY,
-    url TEXT UNIQUE
-);
-
 /*
- * Users may be partially hydrated with only a name/screen_name 
- * if they are first encountered during a quote/reply/mention 
+ * Users may be partially hydrated with only a name/screen_name
+ * if they are first encountered during a quote/reply/mention
  * inside of a tweet someone else's tweet.
  */
 CREATE TABLE users (
-    id_users BIGINT PRIMARY KEY,
+    id_users BIGINT,
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ,
-    id_urls BIGINT REFERENCES urls(id_urls),
+    url TEXT,
     friends_count INTEGER,
     listed_count INTEGER,
     favourites_count INTEGER,
@@ -29,8 +24,7 @@ CREATE TABLE users (
     name TEXT,
     location TEXT,
     description TEXT,
-    withheld_in_countries VARCHAR(2)[],
-    FOREIGN KEY (id_urls) REFERENCES urls(id_urls) DEFERRABLE INITIALLY DEFERRED
+    withheld_in_countries VARCHAR(2)[]
 );
 
 /*
@@ -54,9 +48,7 @@ CREATE TABLE tweets (
     state_code VARCHAR(2),
     lang TEXT,
     place_name TEXT,
-    geo geometry,
-    FOREIGN KEY (id_users) REFERENCES users(id_users) DEFERRABLE INITIALLY DEFERRED,
-    FOREIGN KEY (in_reply_to_user_id) REFERENCES users(id_users) DEFERRABLE INITIALLY DEFERRED
+    geo geometry
 
     -- NOTE:
     -- We do not have the following foreign keys because they would require us
@@ -69,10 +61,9 @@ CREATE INDEX tweets_index_withheldincountries ON tweets USING gin(withheld_in_co
 
 CREATE TABLE tweet_urls (
     id_tweets BIGINT,
-    id_urls BIGINT,
-    PRIMARY KEY (id_tweets, id_urls),
-    FOREIGN KEY (id_tweets) REFERENCES tweets(id_tweets) DEFERRABLE INITIALLY DEFERRED,
-    FOREIGN KEY (id_urls) REFERENCES urls(id_urls) DEFERRABLE INITIALLY DEFERRED
+    url TEXT,
+    PRIMARY KEY (id_tweets, url),
+    FOREIGN KEY (id_tweets) REFERENCES tweets(id_tweets) DEFERRABLE INITIALLY DEFERRED
 );
 
 
@@ -80,8 +71,7 @@ CREATE TABLE tweet_mentions (
     id_tweets BIGINT,
     id_users BIGINT,
     PRIMARY KEY (id_tweets, id_users),
-    FOREIGN KEY (id_tweets) REFERENCES tweets(id_tweets) DEFERRABLE INITIALLY DEFERRED,
-    FOREIGN KEY (id_users) REFERENCES users(id_users) DEFERRABLE INITIALLY DEFERRED
+    FOREIGN KEY (id_tweets) REFERENCES tweets(id_tweets) DEFERRABLE INITIALLY DEFERRED
 );
 CREATE INDEX tweet_mentions_index ON tweet_mentions(id_users);
 
@@ -97,10 +87,9 @@ CREATE INDEX tweet_tags_index ON tweet_tags(id_tweets);
 
 CREATE TABLE tweet_media (
     id_tweets BIGINT,
-    id_urls BIGINT,
+    url TEXT,
     type TEXT,
-    PRIMARY KEY (id_tweets, id_urls),
-    FOREIGN KEY (id_urls) REFERENCES urls(id_urls) DEFERRABLE INITIALLY DEFERRED,
+    PRIMARY KEY (id_tweets, url),
     FOREIGN KEY (id_tweets) REFERENCES tweets(id_tweets) DEFERRABLE INITIALLY DEFERRED
 );
 
@@ -108,9 +97,9 @@ CREATE TABLE tweet_media (
  * Precomputes the total number of occurrences for each hashtag
  */
 CREATE MATERIALIZED VIEW tweet_tags_total AS (
-    SELECT 
+    SELECT
         row_number() over (order by count(*) desc) AS row,
-        tag, 
+        tag,
         count(*) AS total
     FROM tweet_tags
     GROUP BY tag
@@ -121,7 +110,7 @@ CREATE MATERIALIZED VIEW tweet_tags_total AS (
  * Precomputes the number of hashtags that co-occur with each other
  */
 CREATE MATERIALIZED VIEW tweet_tags_cooccurrence AS (
-    SELECT 
+    SELECT
         t1.tag AS tag1,
         t2.tag AS tag2,
         count(*) AS total
