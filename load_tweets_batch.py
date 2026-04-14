@@ -172,7 +172,15 @@ def insert_tweets(connection, tweets, batch_size=1000):
     '''
     for i,tweet_batch in enumerate(batch(tweets, batch_size)):
         print(datetime.datetime.now(),'insert_tweets i=',i)
-        _insert_tweets(connection, tweet_batch)
+        while True:
+            try:
+                with connection.begin() as trans:
+                    _insert_tweets(connection, tweet_batch)
+                break
+            except Exception as e:
+                if 'deadlock' in str(e).lower():
+                    continue
+                raise
 
 
 def _insert_tweets(connection,input_tweets):
@@ -445,14 +453,13 @@ if __name__ == '__main__':
     # NOTE:
     # we reverse sort the filenames because this results in fewer updates to the users table,
     # which prevents excessive dead tuples and autovacuums
-    with connection.begin() as trans:
-        for filename in sorted(args.inputs, reverse=True):
-            with zipfile.ZipFile(filename, 'r') as archive: 
-                print(datetime.datetime.now(),filename)
-                for subfilename in sorted(archive.namelist(), reverse=True):
-                    with io.TextIOWrapper(archive.open(subfilename)) as f:
-                        tweets = []
-                        for i,line in enumerate(f):
-                            tweet = json.loads(line)
-                            tweets.append(tweet)
-                        insert_tweets(connection,tweets,args.batch_size)
+    for filename in sorted(args.inputs, reverse=True):
+        with zipfile.ZipFile(filename, 'r') as archive:
+            print(datetime.datetime.now(),filename)
+            for subfilename in sorted(archive.namelist(), reverse=True):
+                with io.TextIOWrapper(archive.open(subfilename)) as f:
+                    tweets = []
+                    for i,line in enumerate(f):
+                        tweet = json.loads(line)
+                        tweets.append(tweet)
+                    insert_tweets(connection,tweets,args.batch_size)
